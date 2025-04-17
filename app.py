@@ -2,29 +2,31 @@ import os
 import time
 import fitz  # PyMuPDF
 from flask import Flask, request, render_template, send_file, redirect, url_for, session, jsonify
+from dotenv import load_dotenv
 import google.generativeai as genai
 import requests
 
-# Configure Gemini API
-GEMINI_API_KEY = "AIzaSyA_RMTkUPuHY3we3BnZ62H71qUwCazhVoY"  # Replace with your Gemini API key
-genai.configure(api_key=GEMINI_API_KEY)
+load_dotenv()  # Load environment variables from .env
 
-# The model name may have changed - use the correct one
-model = genai.GenerativeModel('gemini-1.5-pro')  # Updated model name
+# Load sensitive info from environment
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+USER_ID = os.getenv("ULCA_USER_ID")
+ULCA_API_KEY = os.getenv("ULCA_API_KEY")
+SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
+
+# Configure Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-pro')
 
 app = Flask(__name__)
-app.secret_key = 'secret-key-for-session'  # Needed to store summary in session
+app.secret_key = SECRET_KEY
 
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'output'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-# Updated API credentials
-USER_ID = "338ed70df2d643d885a8507e83f6a68d"
-ULCA_API_KEY = "3221ec0400-0233-4a38-8e3b-ca93785b435d"
 
-# Updated language dictionary with proper format
 languages = {
     0: {"code": "en", "name": "English"},
     1: {"code": "hi", "name": "Hindi"},
@@ -53,25 +55,17 @@ languages = {
 
 
 def summarize_text(text):
-    # For very large documents, we might need to truncate
-    # Gemini has a limit on input tokens
-    max_length = 30000  # Adjust based on model limits
-    truncated_text = text[:max_length] if len(text) > max_length else text
+    max_length = 30000
+    truncated_text = text[:max_length]
 
     prompt = f"Summarize the following text clearly and concisely, capturing all key points:\n\n{truncated_text}"
     try:
-        # Add more error handling and debug info
-        print(f"Attempting to generate content with model: gemini-1.5-pro")
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        print(f"Error details: {str(e)}")
-        # Attempt to list available models
         try:
             available_models = genai.list_models()
-            models_info = "Available models:\n"
-            for m in available_models:
-                models_info += f"- {m.name}\n"
+            models_info = "Available models:\n" + "\n".join(f"- {m.name}" for m in available_models)
             return f"Summarization failed: {str(e)}\n\n{models_info}"
         except Exception as model_err:
             return f"Summarization failed: {str(e)}\nCouldn't list models: {str(model_err)}"
@@ -79,11 +73,7 @@ def summarize_text(text):
 
 def process_pdf(document_path):
     doc = fitz.open(document_path)
-    full_text = []
-    for page_num, page in enumerate(doc):
-        page_text = page.get_text()
-        full_text.append(f"--- Page {page_num + 1} ---\n{page_text}\n")
-    return "\n".join(full_text)
+    return "\n".join(f"--- Page {i+1} ---\n{page.get_text()}\n" for i, page in enumerate(doc))
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -93,41 +83,36 @@ def upload_file():
     error = ""
 
     if request.method == 'POST':
-        if 'file' not in request.files:
-            error = "No file part"
+        file = request.files.get('file')
+        if not file or file.filename == '':
+            error = "No file selected"
+        elif not file.filename.endswith('.pdf'):
+            error = "Please upload a PDF file"
         else:
-            file = request.files['file']
-            if file.filename == '':
-                error = "No selected file"
-            elif not file.filename.endswith('.pdf'):
-                error = "Please upload a PDF file"
-            else:
-                try:
-                    timestamp = time.strftime("%Y%m%d-%H%M%S")
-                    filepath = os.path.join(UPLOAD_FOLDER, f"uploaded_{timestamp}.pdf")
-                    file.save(filepath)
+            try:
+                timestamp = time.strftime("%Y%m%d-%H%M%S")
+                filepath = os.path.join(UPLOAD_FOLDER, f"uploaded_{timestamp}.pdf")
+                file.save(filepath)
 
-                    extracted_text = process_pdf(filepath)
-                    summary = summarize_text(extracted_text)
+                extracted_text = process_pdf(filepath)
+                summary = summarize_text(extracted_text)
 
-                    output_path = os.path.join(OUTPUT_FOLDER, f"summary_{timestamp}.txt")
-                    with open(output_path, 'w', encoding='utf-8') as f:
-                        f.write(summary)
+                output_path = os.path.join(OUTPUT_FOLDER, f"summary_{timestamp}.txt")
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(summary)
 
-                    session['summary'] = summary
-                    filename = f"summary_{timestamp}.txt"
-                    session['download_path'] = output_path
-
-                except Exception as e:
-                    error = f"Error processing PDF: {str(e)}"
+                session['summary'] = summary
+                session['download_path'] = output_path
+                filename = f"summary_{timestamp}.txt"
+            except Exception as e:
+                error = f"Error processing PDF: {str(e)}"
 
     return render_template('index.html', summary=summary, filename=filename, error=error, languages=languages)
 
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    file_path = os.path.join(OUTPUT_FOLDER, filename)
-    return send_file(file_path, as_attachment=True)
+    return send_file(os.path.join(OUTPUT_FOLDER, filename), as_attachment=True)
 
 
 @app.route('/translate', methods=['POST'])
@@ -136,43 +121,33 @@ def translate():
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
-    # Get content and language selections
     target_language_id = data.get('target_language')
     content = data.get('content')
 
     if not all([content, target_language_id]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    # Always use English (0) as source language
-    source_lang_code = 0
-
-    # Convert target language ID to int if it's sent as string
     try:
         target_lang_code = int(target_language_id)
+        if target_lang_code not in languages:
+            raise ValueError("Invalid language ID")
     except ValueError:
         return jsonify({"error": "Invalid target language format"}), 400
 
-    if target_lang_code not in languages:
-        return jsonify({"error": "Invalid target language selection"}), 400
+    source_language = languages[0]["code"]
+    target_language = languages[target_lang_code]["code"]
 
     try:
-        # Convert integer codes to language codes
-        source_language = languages[source_lang_code]["code"]
-        target_language = languages[target_lang_code]["code"]
-
-        # Step 1: Configure the translation pipeline
         config_payload = {
-            "pipelineTasks": [
-                {
-                    "taskType": "translation",
-                    "config": {
-                        "language": {
-                            "sourceLanguage": source_language,
-                            "targetLanguage": target_language
-                        }
+            "pipelineTasks": [{
+                "taskType": "translation",
+                "config": {
+                    "language": {
+                        "sourceLanguage": source_language,
+                        "targetLanguage": target_language
                     }
                 }
-            ],
+            }],
             "pipelineRequestConfig": {
                 "pipelineId": "64392f96daac500b55c543cd"
             }
@@ -190,70 +165,54 @@ def translate():
             headers=config_headers
         )
 
-        # Step 2: Check configuration response and prepare translation request
-        if config_response.status_code == 200:
-            config_data = config_response.json()
-            service_id = config_data["pipelineResponseConfig"][0]["config"][0]["serviceId"]
-            callback_url = config_data["pipelineInferenceAPIEndPoint"]["callbackUrl"]
-            inference_api_key_name = config_data["pipelineInferenceAPIEndPoint"]["inferenceApiKey"]["name"]
-            inference_api_key_value = config_data["pipelineInferenceAPIEndPoint"]["inferenceApiKey"]["value"]
-
-            # Step 3: Prepare and send the translation (compute) request
-            compute_payload = {
-                "pipelineTasks": [
-                    {
-                        "taskType": "translation",
-                        "config": {
-                            "language": {
-                                "sourceLanguage": source_language,
-                                "targetLanguage": target_language
-                            },
-                            "serviceId": service_id
-                        }
-                    }
-                ],
-                "inputData": {
-                    "input": [
-                        {
-                            "source": content
-                        }
-                    ],
-                    "audio": [
-                        {
-                            "audioContent": None
-                        }
-                    ]
-                }
-            }
-
-            compute_headers = {
-                "Content-Type": "application/json",
-                inference_api_key_name: inference_api_key_value
-            }
-
-            compute_response = requests.post(callback_url, json=compute_payload, headers=compute_headers)
-
-            # Step 4: Process the translation response
-            if compute_response.status_code == 200:
-                compute_data = compute_response.json()
-                translated_text = compute_data["pipelineResponse"][0]["output"][0]["target"]
-                return jsonify({
-                    "status_code": 200,
-                    "message": "Translation successful",
-                    "translated_content": translated_text
-                })
-            else:
-                return jsonify({
-                    "status_code": compute_response.status_code,
-                    "message": f"Translation failed: {compute_response.text}",
-                    "translated_content": None
-                })
-        else:
+        if config_response.status_code != 200:
             return jsonify({
                 "status_code": config_response.status_code,
                 "message": f"Pipeline configuration failed: {config_response.text}",
                 "translated_content": None
             })
+
+        config_data = config_response.json()
+        endpoint = config_data["pipelineInferenceAPIEndPoint"]
+        service_id = config_data["pipelineResponseConfig"][0]["config"][0]["serviceId"]
+
+        compute_payload = {
+            "pipelineTasks": [{
+                "taskType": "translation",
+                "config": {
+                    "language": {
+                        "sourceLanguage": source_language,
+                        "targetLanguage": target_language
+                    },
+                    "serviceId": service_id
+                }
+            }],
+            "inputData": {
+                "input": [{"source": content}],
+                "audio": [{"audioContent": None}]
+            }
+        }
+
+        compute_headers = {
+            "Content-Type": "application/json",
+            endpoint["inferenceApiKey"]["name"]: endpoint["inferenceApiKey"]["value"]
+        }
+
+        compute_response = requests.post(endpoint["callbackUrl"], json=compute_payload, headers=compute_headers)
+
+        if compute_response.status_code == 200:
+            translated_text = compute_response.json()["pipelineResponse"][0]["output"][0]["target"]
+            return jsonify({
+                "status_code": 200,
+                "message": "Translation successful",
+                "translated_content": translated_text
+            })
+
+        return jsonify({
+            "status_code": compute_response.status_code,
+            "message": f"Translation failed: {compute_response.text}",
+            "translated_content": None
+        })
     except Exception as e:
         return jsonify({
             "status_code": 500,
