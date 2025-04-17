@@ -1,0 +1,7 @@
+This document details three cloud computing lab tasks.
+
+**Task 1:** Install VirtualBox and create VMs.  It outlines installing VirtualBox and importing an OpenNebula sandbox appliance.  It then describes creating VMs using OpenNebula through a web interface (localhost:9869, user: oneadmin, pass: opennebula).
+
+**Task 2:** Install a C compiler and execute programs within a VM. This involves importing a Ubuntu VM (ubuntu_gt6.ova, user: dinesh, pass: 99425) into VirtualBox and then compiling and running a simple C program using gcc within the VM.
+
+**Task 3:** Explore AWS CloudShell. The document describes AWS CloudShell, a browser-based shell for managing AWS resources, highlighting its features such as pre-installed tools (AWS CLI, Git, Python, etc.), 5GB persistent storage, IAM integration, and its free tier usage. It also lists common use cases, including running CLI commands, script development, and DevOps tasks.

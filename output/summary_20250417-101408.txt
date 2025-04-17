@@ -1,0 +1,7 @@
+This document details cloud computing lab exercises using VirtualBox and AWS CloudShell.
+
+**Task 1: VirtualBox Installation and VM Creation** involves installing VirtualBox, importing an OpenNebula sandbox OVA file (using root/opennebula credentials), and creating VMs via the OpenNebula web interface (localhost:9869, oneadmin/opennebula).  Applications mentioned include Amazon, Hotmail, Facebook, and LinkedIn.
+
+**Task 2: C Compiler in VM** describes running C code within a VM.  It covers importing a different Ubuntu OVA (ubuntu_gt6.ova, dinesh/99425), compiling, and executing a simple C program using gedit and gcc within the terminal.  OpenNebula is briefly described as an open-source cloud platform.
+
+**Task 3: Exploring AWS CloudShell** outlines accessing and using AWS CloudShell. Key features highlighted are: pre-configured environment, persistent 5GB storage, pre-installed tools (AWS CLI, Git, Python, Node.js, editors), IAM integration for security, automatic session termination after one hour of inactivity, and free usage with limitations.  Use cases include running CLI commands, script development, DevOps tasks, and learning/experimentation.  The document also shows screenshots of launching and connecting to an instance, though without detailed instructions.
