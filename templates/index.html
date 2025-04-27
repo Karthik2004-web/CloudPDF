@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Summarizer</title>
+    <title>PDF Summarizer & Translator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -34,7 +34,7 @@
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        .upload-form button {
+        .upload-form button, .translate-button {
             padding: 10px 15px;
             background-color: #4CAF50;
             color: white;
@@ -43,7 +43,7 @@
             cursor: pointer;
             font-size: 16px;
         }
-        .upload-form button:hover {
+        .upload-form button:hover, .translate-button:hover {
             background-color: #45a049;
         }
         .summary-container {
@@ -54,6 +54,13 @@
             border: 1px solid #ddd;
         }
         .summary-text {
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        .translated-text {
             white-space: pre-wrap;
             background-color: #f9f9f9;
             padding: 15px;
@@ -94,11 +101,81 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .tab-container {
+            margin-top: 15px;
+            display: flex;
+            border-bottom: 1px solid #ccc;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .language-selector-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .language-selector {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            min-width: 200px;
+        }
+        .success-message {
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .info-text {
+            color: #555;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        .source-language {
+            color: #555;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        .download-translation {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #FF9800;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .download-translation:hover {
+            background-color: #F57C00;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>PDF Summarizer</h1>
+        <h1>PDF Summarizer & Translator</h1>
 
         <form class="upload-form" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
             <input type="file" name="file" accept=".pdf" required>
@@ -116,12 +193,54 @@
 
         {% if summary %}
         <div class="summary-container">
-            <h2>Summary:</h2>
-            <div class="summary-text">{{ summary }}</div>
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('summary')">Summary</div>
+                <div class="tab" onclick="switchTab('translation')">Translation</div>
+            </div>
 
-            {% if filename %}
-            <a href="{{ url_for('download_file', filename=filename) }}" class="download-link">Download Summary</a>
-            {% endif %}
+            <!-- Summary Tab Content -->
+            <div id="summary-tab" class="tab-content active">
+                <h2>Summary:</h2>
+                <div id="summary-text" class="summary-text">{{ summary }}</div>
+
+                {% if filename %}
+                <div class="button-group">
+                    <a href="{{ url_for('download_file', filename=filename) }}" class="download-link">Download Summary</a>
+                    <button class="translate-button" onclick="showTranslation()">Translate Summary</button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Translation Tab Content -->
+            <div id="translation-tab" class="tab-content">
+                <h2>Translate Summary:</h2>
+                <p class="info-text">Translate the summary from English to your selected language.</p>
+                <p class="source-language">Source Language: English</p>
+                <div class="language-selector-container">
+                    <div>
+                        <label for="target-language">Select Target Language:</label>
+                        <select id="target-language" class="language-selector">
+                            {% for id, lang in languages.items() %}
+                                {% if id != 0 %}
+                                <option value="{{ id }}">{{ lang.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button id="translate-button" class="translate-button" onclick="translateSummary()">Translate</button>
+                </div>
+                <div id="translation-loading" class="loading">
+                    <p>Translating your summary. Please wait...</p>
+                    <div class="spinner"></div>
+                </div>
+                <div id="translation-error" class="error" style="display: none;"></div>
+                <div id="translation-success" class="success-message" style="display: none;"></div>
+                <div id="translated-content-container" style="display: none;">
+                    <h3>Translated Text:</h3>
+                    <div id="translated-content" class="translated-text"></div>
+                    <button class="download-translation" onclick="downloadTranslation()">Download Translation</button>
+                </div>
+            </div>
         </div>
         {% endif %}
     </div>
@@ -129,6 +248,90 @@
     <script>
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
+        }
+
+        function showTranslation() {
+            switchTab('translation');
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs and remove active class
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show the selected tab and add active class
+            document.getElementById(tabName + '-tab').classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        }
+
+        function translateSummary() {
+            const summary = document.getElementById('summary-text').innerText;
+            const targetLang = document.getElementById('target-language').value;
+
+            // Show loading spinner
+            document.getElementById('translation-loading').style.display = 'block';
+            document.getElementById('translated-content-container').style.display = 'none';
+            document.getElementById('translation-error').style.display = 'none';
+            document.getElementById('translation-success').style.display = 'none';
+
+            // Make API request to translate
+            fetch('/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    target_language: parseInt(targetLang),
+                    content: summary
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading spinner
+                document.getElementById('translation-loading').style.display = 'none';
+
+                if (data.error) {
+                    document.getElementById('translation-error').innerText = data.error;
+                    document.getElementById('translation-error').style.display = 'block';
+                } else if (data.translated_content) {
+                    document.getElementById('translated-content').innerText = data.translated_content;
+                    document.getElementById('translated-content-container').style.display = 'block';
+                    document.getElementById('translation-success').innerText = 'Translation completed successfully!';
+                    document.getElementById('translation-success').style.display = 'block';
+                } else if (data.status_code !== 200) {
+                    document.getElementById('translation-error').innerText = data.message || 'Translation failed';
+                    document.getElementById('translation-error').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('translation-loading').style.display = 'none';
+                document.getElementById('translation-error').innerText = 'Error: ' + error.message;
+                document.getElementById('translation-error').style.display = 'block';
+            });
+        }
+
+        function downloadTranslation() {
+            const translatedText = document.getElementById('translated-content').innerText;
+            const targetLangSelect = document.getElementById('target-language');
+            const targetLangName = targetLangSelect.options[targetLangSelect.selectedIndex].text;
+
+            // Create a blob from the text
+            const blob = new Blob([translatedText], {type: 'text/plain'});
+
+            // Create a temporary link to download the file
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `translation_${targetLangName.toLowerCase()}_${Date.now()}.txt`;
+
+            // Append to the document, click it, and remove it
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 </body>
