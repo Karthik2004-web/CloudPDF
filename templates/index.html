@@ -3,288 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Summarizer & Translator</title>
+    <title>PDF Summarizer, Translator & Q&A</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        .container {
-            background-color: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .upload-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .upload-form input[type="file"] {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .upload-form button, .translate-button {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .upload-form button:hover, .translate-button:hover {
-            background-color: #45a049;
-        }
-        .summary-container {
-            margin-top: 20px;
-            background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        .summary-text {
-            white-space: pre-wrap;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #eee;
-        }
-        .translated-text {
-            white-space: pre-wrap;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #eee;
-        }
-        .download-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 15px;
-            background-color: #2196F3;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .download-link:hover {
-            background-color: #0b7dda;
-        }
-        .error {
-            color: red;
-            font-weight: bold;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 15px;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 2s linear infinite;
-            margin: 0 auto;
-        }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .tab-container {
-            margin-top: 15px;
-            display: flex;
-            border-bottom: 1px solid #ccc;
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
         }
-        .tab {
-            padding: 10px 15px;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-bottom: none;
-            border-radius: 5px 5px 0 0;
-            margin-right: 5px;
-        }
-        .tab.active {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .tab-content {
-            display: none;
-            padding: 15px 0;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .language-selector-container {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .language-selector {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            min-width: 200px;
-        }
-        .success-message {
-            color: green;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .info-text {
-            color: #555;
-            font-style: italic;
-            margin-bottom: 10px;
-        }
-        .source-language {
-            color: #555;
-            font-style: italic;
-            margin-bottom: 10px;
-        }
-        .download-translation {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 15px;
-            background-color: #FF9800;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .download-translation:hover {
-            background-color: #F57C00;
+        .gradient-bg {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>PDF Summarizer & Translator</h1>
-
-        <form class="upload-form" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
-            <input type="file" name="file" accept=".pdf" required>
-            <button type="submit">Upload and Summarize</button>
-        </form>
-
-        <div id="loading" class="loading">
-            <p>Processing your PDF. This may take a moment...</p>
-            <div class="spinner"></div>
-        </div>
-
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
-
-        {% if summary %}
-        <div class="summary-container">
-            <div class="tab-container">
-                <div class="tab active" onclick="switchTab('summary')">Summary</div>
-                <div class="tab" onclick="switchTab('translation')">Translation</div>
+<body class="bg-gray-100 font-sans">
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden">
+            <div class="gradient-bg p-6 text-center">
+                <h1 class="text-3xl font-bold text-white">PDF Summarizer, Translator & Q&A</h1>
+                <p class="text-white mt-2">Upload a PDF to summarize, translate, or ask questions!</p>
             </div>
 
-            <!-- Summary Tab Content -->
-            <div id="summary-tab" class="tab-content active">
-                <h2>Summary:</h2>
-                <div id="summary-text" class="summary-text">{{ summary }}</div>
+            <div class="p-6">
+                <form class="space-y-4" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+                    <div class="flex items-center gap-4">
+                        <input type="file" name="file" accept=".pdf" required class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 flex-1">
+                        <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-full hover:bg-blue-700 transition">Upload & Summarize</button>
+                    </div>
+                </form>
 
-                {% if filename %}
-                <div class="button-group">
-                    <a href="{{ url_for('download_file', filename=filename) }}" class="download-link">Download Summary</a>
-                    <button class="translate-button" onclick="showTranslation()">Translate Summary</button>
+                <div id="loading" class="hidden flex items-center justify-center mt-4">
+                    <div class="spinner"></div>
+                    <p class="ml-2 text-gray-600">Processing your PDF...</p>
+                </div>
+
+                {% if error %}
+                <div class="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">{{ error }}</div>
+                {% endif %}
+
+                {% if summary %}
+                <div class="mt-6">
+                    <div class="flex border-b border-gray-200">
+                        <button class="tab px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600" onclick="switchTab('summary')">Summary</button>
+                        <button class="tab px-4 py-2 font-medium text-gray-600" onclick="switchTab('qa')">Q&A</button>
+                        <button class="tab px-4 py-2 font-medium text-gray-600" onclick="switchTab('translation')">Translation</button>
+                    </div>
+
+                    <!-- Summary Tab -->
+                    <div id="summary-tab" class="tab-content mt-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Summary</h2>
+                        <div class="mt-2 p-4 bg-gray-50 rounded-lg text-gray-700">{{ summary }}</div>
+                        {% if filename %}
+                        <div class="mt-4 flex gap-4">
+                            <a href="{{ url_for('download_file', filename=filename) }}" class="bg-green-600 text-white py-2 px-4 rounded-full hover:bg-green-700 transition">Download Summary</a>
+                            <button onclick="showTranslation()" class="bg-purple-600 text-white py-2 px-4 rounded-full hover:bg-purple-700 transition">Translate Summary</button>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Q&A Tab -->
+                    <div id="qa-tab" class="tab-content hidden mt-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Ask a Question</h2>
+                        <div class="mt-2">
+                            <textarea id="question-input" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Ask a question about the PDF content..."></textarea>
+                            <button onclick="askQuestion()" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded-full hover:bg-blue-700 transition">Submit Question</button>
+                        </div>
+                        <div id="qa-loading" class="hidden flex items-center justify-center mt-4">
+                            <div class="spinner"></div>
+                            <p class="ml-2 text-gray-600">Fetching answer...</p>
+                        </div>
+                        <div id="qa-error" class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded-lg"></div>
+                        <div id="qa-answer" class="hidden mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg"></div>
+                    </div>
+
+                    <!-- Translation Tab -->
+                    <div id="translation-tab" class="tab-content hidden mt-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Translate Summary</h2>
+                        <p class="text-gray-600 mt-1">Translate the summary from English to your selected language.</p>
+                        <div class="mt-4 flex flex-wrap gap-4 items-center">
+                            <select id="target-language" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% for id, lang in languages.items() %}
+                                    {% if id != 0 %}
+                                    <option value="{{ id }}">{{ lang.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <button id="translate-button" onclick="translateSummary()" class="bg-purple-600 text-white py-2 px-4 rounded-full hover:bg-purple-700 transition">Translate</button>
+                        </div>
+                        <div id="translation-loading" class="hidden flex items-center justify-center mt-4">
+                            <div class="spinner"></div>
+                            <p class="ml-2 text-gray-600">Translating your summary...</p>
+                        </div>
+                        <div id="translation-error" class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded-lg"></div>
+                        <div id="translation-success" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded-lg"></div>
+                        <div id="translated-content-container" class="hidden mt-4">
+                            <h3 class="text-lg font-medium text-gray-800">Translated Text</h3>
+                            <div id="translated-content" class="mt-2 p-4 bg-gray-50 rounded-lg text-gray-700"></div>
+                            <button onclick="downloadTranslation()" class="mt-2 bg-orange-600 text-white py-2 px-4 rounded-full hover:bg-orange-700 transition">Download Translation</button>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
             </div>
-
-            <!-- Translation Tab Content -->
-            <div id="translation-tab" class="tab-content">
-                <h2>Translate Summary:</h2>
-                <p class="info-text">Translate the summary from English to your selected language.</p>
-                <p class="source-language">Source Language: English</p>
-                <div class="language-selector-container">
-                    <div>
-                        <label for="target-language">Select Target Language:</label>
-                        <select id="target-language" class="language-selector">
-                            {% for id, lang in languages.items() %}
-                                {% if id != 0 %}
-                                <option value="{{ id }}">{{ lang.name }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button id="translate-button" class="translate-button" onclick="translateSummary()">Translate</button>
-                </div>
-                <div id="translation-loading" class="loading">
-                    <p>Translating your summary. Please wait...</p>
-                    <div class="spinner"></div>
-                </div>
-                <div id="translation-error" class="error" style="display: none;"></div>
-                <div id="translation-success" class="success-message" style="display: none;"></div>
-                <div id="translated-content-container" style="display: none;">
-                    <h3>Translated Text:</h3>
-                    <div id="translated-content" class="translated-text"></div>
-                    <button class="download-translation" onclick="downloadTranslation()">Download Translation</button>
-                </div>
-            </div>
         </div>
-        {% endif %}
     </div>
 
     <script>
         function showLoading() {
-            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                tab.classList.add('text-gray-600');
+            });
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
         }
 
         function showTranslation() {
             switchTab('translation');
         }
 
-        function switchTab(tabName) {
-            // Hide all tabs and remove active class
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+        function askQuestion() {
+            const question = document.getElementById('question-input').value.trim();
+            if (!question) {
+                document.getElementById('qa-error').innerText = 'Please enter a question.';
+                document.getElementById('qa-error').classList.remove('hidden');
+                return;
+            }
 
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            document.getElementById('qa-loading').classList.remove('hidden');
+            document.getElementById('qa-error').classList.add('hidden');
+            document.getElementById('qa-answer').classList.add('hidden');
 
-            // Show the selected tab and add active class
-            document.getElementById(tabName + '-tab').classList.add('active');
-            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('qa-loading').classList.add('hidden');
+                if (data.error) {
+                    document.getElementById('qa-error').innerText = data.error;
+                    document.getElementById('qa-error').classList.remove('hidden');
+                } else {
+                    document.getElementById('qa-answer').innerText = data.answer;
+                    document.getElementById('qa-answer').classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                document.getElementById('qa-loading').classList.add('hidden');
+                document.getElementById('qa-error').innerText = 'Error: ' + error.message;
+                document.getElementById('qa-error').classList.remove('hidden');
+            });
         }
 
         function translateSummary() {
-            const summary = document.getElementById('summary-text').innerText;
+            const summary = document.querySelector('#summary-tab .bg-gray-50').innerText;
             const targetLang = document.getElementById('target-language').value;
 
-            // Show loading spinner
-            document.getElementById('translation-loading').style.display = 'block';
-            document.getElementById('translated-content-container').style.display = 'none';
-            document.getElementById('translation-error').style.display = 'none';
-            document.getElementById('translation-success').style.display = 'none';
+            document.getElementById('translation-loading').classList.remove('hidden');
+            document.getElementById('translated-content-container').classList.add('hidden');
+            document.getElementById('translation-error').classList.add('hidden');
+            document.getElementById('translation-success').classList.add('hidden');
 
-            // Make API request to translate
             fetch('/translate', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     target_language: parseInt(targetLang),
                     content: summary
@@ -292,26 +188,24 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Hide loading spinner
-                document.getElementById('translation-loading').style.display = 'none';
-
+                document.getElementById('translation-loading').classList.add('hidden');
                 if (data.error) {
                     document.getElementById('translation-error').innerText = data.error;
-                    document.getElementById('translation-error').style.display = 'block';
+                    document.getElementById('translation-error').classList.remove('hidden');
                 } else if (data.translated_content) {
                     document.getElementById('translated-content').innerText = data.translated_content;
-                    document.getElementById('translated-content-container').style.display = 'block';
+                    document.getElementById('translated-content-container').classList.remove('hidden');
                     document.getElementById('translation-success').innerText = 'Translation completed successfully!';
-                    document.getElementById('translation-success').style.display = 'block';
-                } else if (data.status_code !== 200) {
+                    document.getElementById('translation-success').classList.remove('hidden');
+                } else {
                     document.getElementById('translation-error').innerText = data.message || 'Translation failed';
-                    document.getElementById('translation-error').style.display = 'block';
+                    document.getElementById('translation-error').classList.remove('hidden');
                 }
             })
             .catch(error => {
-                document.getElementById('translation-loading').style.display = 'none';
+                document.getElementById('translation-loading').classList.add('hidden');
                 document.getElementById('translation-error').innerText = 'Error: ' + error.message;
-                document.getElementById('translation-error').style.display = 'block';
+                document.getElementById('translation-error').classList.remove('hidden');
             });
         }
 
@@ -320,15 +214,10 @@
             const targetLangSelect = document.getElementById('target-language');
             const targetLangName = targetLangSelect.options[targetLangSelect.selectedIndex].text;
 
-            // Create a blob from the text
-            const blob = new Blob([translatedText], {type: 'text/plain'});
-
-            // Create a temporary link to download the file
+            const blob = new Blob([translatedText], { type: 'text/plain' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = `translation_${targetLangName.toLowerCase()}_${Date.now()}.txt`;
-
-            // Append to the document, click it, and remove it
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

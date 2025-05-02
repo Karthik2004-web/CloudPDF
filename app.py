@@ -1,7 +1,7 @@
 import os
 import time
 import fitz  # PyMuPDF
-from flask import Flask, request, render_template, send_file, redirect, url_for, session, jsonify
+from flask import Flask, request, render_template, send_file, session, jsonify
 from dotenv import load_dotenv
 import google.generativeai as genai
 import requests
@@ -25,7 +25,6 @@ UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'output'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
 
 languages = {
     0: {"code": "en", "name": "English"},
@@ -53,34 +52,36 @@ languages = {
     22: {"code": "or", "name": "Odia"}
 }
 
-
 def summarize_text(text):
     max_length = 30000
     truncated_text = text[:max_length]
-
     prompt = f"Summarize the following text clearly and concisely, capturing all key points:\n\n{truncated_text}"
     try:
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        try:
-            available_models = genai.list_models()
-            models_info = "Available models:\n" + "\n".join(f"- {m.name}" for m in available_models)
-            return f"Summarization failed: {str(e)}\n\n{models_info}"
-        except Exception as model_err:
-            return f"Summarization failed: {str(e)}\nCouldn't list models: {str(model_err)}"
+        return f"Summarization failed: {str(e)}"
 
+def answer_question(question, context):
+    max_context_length = 30000
+    truncated_context = context[:max_context_length]
+    prompt = f"Based on the following context, answer the question concisely and accurately:\n\nContext:\n{truncated_context}\n\nQuestion: {question}"
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Failed to answer question: {str(e)}"
 
 def process_pdf(document_path):
     doc = fitz.open(document_path)
-    return "\n".join(f"--- Page {i+1} ---\n{page.get_text()}\n" for i, page in enumerate(doc))
-
+    return "\n".join(f"--- Page {i+1} ---\n{page.get_text()}" for i, page in enumerate(doc))
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     summary = ""
     filename = ""
     error = ""
+    extracted_text = session.get('extracted_text', "")
 
     if request.method == 'POST':
         file = request.files.get('file')
@@ -102,6 +103,7 @@ def upload_file():
                     f.write(summary)
 
                 session['summary'] = summary
+                session['extracted_text'] = extracted_text
                 session['download_path'] = output_path
                 filename = f"summary_{timestamp}.txt"
             except Exception as e:
@@ -109,11 +111,29 @@ def upload_file():
 
     return render_template('index.html', summary=summary, filename=filename, error=error, languages=languages)
 
-
 @app.route('/download/<filename>')
 def download_file(filename):
     return send_file(os.path.join(OUTPUT_FOLDER, filename), as_attachment=True)
 
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    question = data.get('question')
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
+
+    extracted_text = session.get('extracted_text', "")
+    if not extracted_text:
+        return jsonify({"error": "No PDF content available. Please upload a PDF first."}), 400
+
+    try:
+        answer = answer_question(question, extracted_text)
+        return jsonify({"status_code": 200, "answer": answer})
+    except Exception as e:
+        return jsonify({"status_code": 500, "error": f"Failed to answer question: {str(e)}"})
 
 @app.route('/translate', methods=['POST'])
 def translate():
@@ -155,8 +175,8 @@ def translate():
 
         config_headers = {
             "Content-Type": "application/json",
-            "userID": USER_ID,
-            "ulcaApiKey": ULCA_API_KEY
+            "userID": os.getenv("ULCA_USER_ID"),
+            "ulcaApiKey": os.getenv("ULCA_API_KEY")
         }
 
         config_response = requests.post(
@@ -220,11 +240,9 @@ def translate():
             "translated_content": None
         })
 
-
 @app.route('/languages', methods=['GET'])
 def get_languages():
     return jsonify({str(id): lang["name"] for id, lang in languages.items()})
-
 
 if __name__ == '__main__':
     app.run(debug=True)
