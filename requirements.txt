@@ -4,6 +4,5 @@ PyMuPDF
 google-generativeai
 python-dotenv~=1.1.0
 
-fitz~=0.0.1.dev2
 protobuf~=5.29.4
 dotenv~=0.9.9
