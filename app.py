@@ -20,7 +20,7 @@ SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.0-flash')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -289,4 +289,5 @@ def get_languages():
     return jsonify({str(id): lang["name"] for id, lang in languages.items()})
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
