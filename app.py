@@ -20,7 +20,7 @@ SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
