@@ -1,16 +1,12 @@
 import os
 import time
-
-
-import fitz  # PyMuPDF
-from flask import Flask, request, render_template, send_file, session, jsonify
+from flask import Flask, request, render_template, send_file, session, jsonify, redirect, url_for
 from dotenv import load_dotenv
 import google.generativeai as genai
 import requests
-import base64
-from io import BytesIO
 
-load_dotenv()  # Load environment variables from .env
+# Load environment variables from .env
+load_dotenv()
 
 # Load sensitive info from environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -20,16 +16,18 @@ SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+# Define folders
 UPLOAD_FOLDER = 'Uploads'
 OUTPUT_FOLDER = 'output'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
+# Language options for translation
 languages = {
     0: {"code": "en", "name": "English"},
     1: {"code": "hi", "name": "Hindi"},
@@ -56,73 +54,25 @@ languages = {
     22: {"code": "or", "name": "Odia"}
 }
 
-def summarize_text(text):
-    max_length = 30000
-    truncated_text = text[:max_length]
-    prompt = f"Summarize the following text clearly and concisely, capturing all key points:\n\n{truncated_text}"
-    try:
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"Summarization failed: {str(e)}"
+# Root route - redirect to homepage
+@app.route('/')
+def root():
+    return redirect(url_for('home'))
 
-def answer_question(question, context):
-    max_context_length = 30000
-    truncated_context = context[:max_context_length]
-    prompt = f"Based on the following context, answer the question concisely and accurately:\n\nContext:\n{truncated_context}\n\nQuestion: {question}"
-    try:
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"Failed to answer question: {str(e)}"
+@app.route('/home')
+def home():
+    return render_template('homepage.html')
 
-def extract_text_from_image(image_bytes):
-    try:
-        # Convert image bytes to base64 for Gemini API
-        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-        # Prepare the content for Gemini API
-        content = [
-            {
-                "mime_type": "image/jpeg",  # Adjust based on actual image type if needed
-                "data": image_base64
-            },
-            "Extract all text from the provided image accurately."
-        ]
-        response = model.generate_content(content)
-        return response.text.strip() if response.text else "No text detected in image"
-    except Exception as e:
-        return f"Image text extraction failed: {str(e)}"
+# Keep the original route for backward compatibility with existing forms
+@app.route('/', methods=['POST'])
+def root_post():
+    return upload_file()
 
-def process_pdf(document_path):
-    doc = fitz.open(document_path)
-    extracted_text = []
-
-    for i, page in enumerate(doc):
-        page_text = page.get_text().strip()
-        if page_text:
-            # If text is present, use it directly
-            extracted_text.append(f"--- Page {i+1} ---\n{page_text}")
-        else:
-            # If no text, try extracting images and processing with Gemini API
-            images = page.get_images(full=True)
-            for img_index, img in enumerate(images):
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                image_bytes = base_image["image"]
-                try:
-                    ocr_text = extract_text_from_image(image_bytes)
-                    extracted_text.append(f"--- Page {i+1} (Image {img_index+1}) ---\n{ocr_text}")
-                except Exception as e:
-                    extracted_text.append(f"--- Page {i+1} (Image {img_index+1}) ---\nText extraction failed: {str(e)}")
-
-    return "\n".join(extracted_text) if extracted_text else "No text or images found in the PDF."
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 def upload_file():
     summary = ""
     filename = ""
     error = ""
-    extracted_text = session.get('extracted_text', "")
 
     if request.method == 'POST':
         file = request.files.get('file')
@@ -133,23 +83,38 @@ def upload_file():
         else:
             try:
                 timestamp = time.strftime("%Y%m%d-%H%M%S")
-                filepath = os.path.join(UPLOAD_FOLDER, f"uploaded_{timestamp}.pdf")
-                file.save(filepath)
+                file_path = os.path.join(UPLOAD_FOLDER, f"uploaded_{timestamp}.pdf")
+                file.save(file_path)
 
-                extracted_text = process_pdf(filepath)
-                if not extracted_text.strip():
-                    error = "No readable text or images found in the PDF"
-                else:
-                    summary = summarize_text(extracted_text)
+                # Check file size
+                file_size = os.path.getsize(file_path) / (1024 * 1024)
+                if file_size > 50:
+                    raise Exception("File size exceeds 50MB limit for File API")
 
-                    output_path = os.path.join(OUTPUT_FOLDER, f"summary_{timestamp}.txt")
-                    with open(output_path, 'w', encoding='utf-8') as f:
-                        f.write(summary)
+                # Upload PDF to Gemini
+                uploaded_file = genai.upload_file(path=file_path, mime_type='application/pdf')
+                session['file_name'] = uploaded_file.name
 
-                    session['summary'] = summary
-                    session['extracted_text'] = extracted_text
-                    session['download_path'] = output_path
-                    filename = f"summary_{timestamp}.txt"
+                # Summarize using Gemini
+                prompt = """Summarize this document clearly and concisely, capturing all key points. 
+                Please ensure the summary is informative and easy to understand.
+                use *** for bold points and * for italics and use \lnn in the response for new line. 
+                please use \lnn for new line , do not use any other special characters.
+                please please please use \lnn for everynew line, new line helps to make the summary more readable.
+                """
+                response = model.generate_content(
+                    contents=[uploaded_file, prompt]
+                )
+                summary = response.text
+                print(summary)
+                # Save to file
+                output_path = os.path.join(OUTPUT_FOLDER, f"summary_{timestamp}.txt")
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(summary)
+
+                session['summary'] = summary
+                session['download_path'] = output_path
+                filename = f"summary_{timestamp}.txt"
             except Exception as e:
                 error = f"Error processing PDF: {str(e)}"
 
@@ -169,13 +134,15 @@ def ask_question():
     if not question:
         return jsonify({"error": "No question provided"}), 400
 
-    extracted_text = session.get('extracted_text', "")
-    if not extracted_text:
-        return jsonify({"error": "No PDF content available. Please upload a PDF first."}), 400
+    file_name = session.get('file_name')
+    if not file_name:
+        return jsonify({"error": "No PDF uploaded"}), 400
 
     try:
-        answer = answer_question(question, extracted_text)
-        return jsonify({"status_code": 200, "answer": answer})
+        file_reference = genai.get_file(file_name)
+        prompt = f"Based on the document, answer the following question concisely and accurately: {question}"
+        response = model.generate_content(contents=[file_reference, prompt])
+        return jsonify({"status_code": 200, "answer": response.text})
     except Exception as e:
         return jsonify({"status_code": 500, "error": f"Failed to answer question: {str(e)}"})
 
@@ -219,8 +186,8 @@ def translate():
 
         config_headers = {
             "Content-Type": "application/json",
-            "userID": os.getenv("ULCA_USER_ID"),
-            "ulcaApiKey": os.getenv("ULCA_API_KEY")
+            "userID": USER_ID,
+            "ulcaApiKey": ULCA_API_KEY
         }
 
         config_response = requests.post(
@@ -290,4 +257,3 @@ def get_languages():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-

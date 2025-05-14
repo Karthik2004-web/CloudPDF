@@ -3,225 +3,814 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Summarizer, Translator & Q&A</title>
+    <title>PDF AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background-color: #111827;
+            color: #e5e7eb;
         }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3b82f6;
+
+        .dynamic-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f172a, #1e293b);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 500ms;
+        }
+
+        .chat-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-in-out;
+            position: relative;
+        }
+
+        .user-message {
+            background-color: #3b82f6;
+            color: white;
+            margin-left: auto;
+            border-top-right-radius: 0;
+        }
+
+        .ai-message {
+            background-color: #1f2937;
+            color: #e5e7eb;
+            margin-right: auto;
+            border-top-left-radius: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            position: relative;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: #3b82f6;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 3px;
+            animation: bounce 1.2s infinite;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+            margin-right: 0;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        .translate-dropdown {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 10;
+        }
+
+        .translate-panel {
+            position: absolute;
+            top: 2rem;
+            right: 0;
+            background: #374151;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            padding: 0.5rem;
+            z-index: 20;
+            width: 200px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* PDF Upload Area */
+        .upload-area {
+            border: 2px dashed #4b5563;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Transition Effects */
+        .scale-up-center {
+            animation: scale-up-center 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+        }
+
+        @keyframes scale-up-center {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Text generation effect */
+        .typing-text {
+            display: inline-block;
+            border-right: 0.1em solid #3b82f6;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+
+        @keyframes cursor-blink {
+            0% { border-color: #3b82f6; }
+            50% { border-color: transparent; }
+            100% { border-color: #3b82f6; }
+        }
+
+        .typing-cursor {
+            animation: cursor-blink 1s step-end infinite;
+        }
+
+        /* Lazy load image effect */
+        .lazy-load {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .lazy-load.loaded {
+            opacity: 1;
+        }
+
+        /* Format for summary and answers */
+        .formatted-content strong {
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        .formatted-content em {
+            font-style: italic;
+            color: #93c5fd;
+        }
+        .formatted-content p {
+            margin-bottom: 0.75rem;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        /* Dark mode form elements */
+        input, textarea, select {
+            background-color: #374151;
+            color: #e5e7eb;
+            border-color: #4b5563;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+
+        .glow-effect {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden">
-            <div class="gradient-bg p-6 text-center">
-                <h1 class="text-3xl font-bold text-white">PDF Summarizer, Translator & Q&A</h1>
-                <p class="text-white mt-2">This is the latest commit of Upload a PDF to summarize, translate, or ask questions!</p>
+<body>
+    <!-- Dynamic Background -->
+    <div class="dynamic-background"></div>
+
+    <!-- Main Container -->
+    <div class="min-h-screen w-full flex items-center justify-center p-4 relative">
+        <!-- Initial Upload Box / Chat Interface Container -->
+<div id="main-container" class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] transition-all overflow-hidden border border-gray-700">            <!-- Header -->
+            <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 border-b border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-blue-400">PDF AI Assistant</h1>
+                    <div id="summary-actions" class="{% if not summary %}hidden{% endif %} space-x-2">
+                        {% if filename %}
+                        <a href="{{ url_for('download_file', filename=filename) }}" class="bg-gray-700 hover:bg-gray-600 text-blue-300 text-sm py-1 px-3 rounded-full transition">
+                            <i class="fas fa-download mr-1"></i> Summary
+                        </a>
+                        {% endif %}
+                        <button id="toggle-view-btn" class="bg-gray-700 hover:bg-gray-600 text-blue-300 text-sm py-1 px-3 rounded-full transition">
+                            <i class="fas fa-comments mr-1"></i> Chat
+                        </button>
+                    </div>
+                </div>
+                <p class="text-blue-200 mt-2 text-sm opacity-80">Upload a PDF to summarize, ask questions, and translate content</p>
             </div>
 
-            <div class="p-6">
-                <form class="space-y-4" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
-                    <div class="flex items-center gap-4">
-                        <input type="file" name="file" accept=".pdf" required class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 flex-1">
-                        <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-full hover:bg-blue-700 transition">Upload & Summarize</button>
-                    </div>
-                </form>
+            <!-- Upload State (Only show if no summary yet) -->
+            <div id="upload-state" class="{% if summary %}hidden{% endif %} p-10 flex items-center justify-center">
+                <div class="w-full max-w-md">
+                    <form id="upload-form" class="space-y-6" method="POST" enctype="multipart/form-data" action="/">
+                        <div class="upload-area flex flex-col items-center justify-center p-10 text-center">
+                            <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4 glow-effect">
+                                <i class="fas fa-file-pdf text-2xl text-blue-400"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-200 mb-2">Drop your PDF here</h3>
+                            <p class="text-gray-400 mb-6 text-sm">Or click to browse files</p>
+                            <input id="file-input" type="file" name="file" accept=".pdf" required class="hidden">
+                            <button type="button" id="browse-btn" class="bg-blue-600 text-white py-2 px-6 rounded-full hover:bg-blue-700 transition">
+                                Browse Files
+                            </button>
+                        </div>
+                        <div id="selected-file" class="hidden bg-gray-700 p-3 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-pdf text-blue-400 mr-2"></i>
+                                    <span id="file-name" class="text-sm font-medium text-gray-200"></span>
+                                </div>
+                                <button type="button" id="remove-file" class="text-gray-400 hover:text-red-400">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button id="submit-btn" type="submit" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition hidden">
+                            <span id="submit-text">Process PDF</span>
+                            <span id="loading-spinner" class="hidden">
+                                <div class="loading-spinner"></div>
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
 
-                <div id="loading" class="hidden flex items-center justify-center mt-4">
-                    <div class="spinner"></div>
-                    <p class="ml-2 text-gray-600">Processing your PDF...</p>
+            <!-- Error Message Display -->
+            {% if error %}
+            <div class="p-4 bg-red-900 text-red-200 rounded-lg mx-6 my-4 border border-red-700">{{ error }}</div>
+            {% endif %}
+
+            <!-- Summary View (Only show if summary exists) -->
+            <div id="summary-view" class="{% if not summary %}hidden{% endif %} p-6">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">PDF Summary</h2>
+                <div id="summary-content" class="bg-gray-700 p-6 rounded-xl text-gray-200 formatted-content border border-gray-600">
+                    {% if summary %}{{ summary|safe }}{% endif %}
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div id="chat-interface" class="hidden flex flex-col h-full">
+                <!-- Chat Messages Container -->
+                <div id="chat-container" class="chat-container p-4 flex-grow">
+                    <!-- Initial AI message with summary will be added here -->
                 </div>
 
-                {% if error %}
-                <div class="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">{{ error }}</div>
-                {% endif %}
-
-                {% if summary %}
-                <div class="mt-6">
-                    <div class="flex border-b border-gray-200">
-                        <button class="tab px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600" onclick="switchTab('summary')">Summary</button>
-                        <button class="tab px-4 py-2 font-medium text-gray-600" onclick="switchTab('qa')">Q&A</button>
-                        <button class="tab px-4 py-2 font-medium text-gray-600" onclick="switchTab('translation')">Translation</button>
-                    </div>
-
-                    <!-- Summary Tab -->
-                    <div id="summary-tab" class="tab-content mt-4">
-                        <h2 class="text-xl font-semibold text-gray-800">Summary</h2>
-                        <div class="mt-2 p-4 bg-gray-50 rounded-lg text-gray-700">{{ summary }}</div>
-                        {% if filename %}
-                        <div class="mt-4 flex gap-4">
-                            <a href="{{ url_for('download_file', filename=filename) }}" class="bg-green-600 text-white py-2 px-4 rounded-full hover:bg-green-700 transition">Download Summary</a>
-                            <button onclick="showTranslation()" class="bg-purple-600 text-white py-2 px-4 rounded-full hover:bg-purple-700 transition">Translate Summary</button>
+                <!-- Message Input Area -->
+                <div class="border-t border-gray-700 p-4 bg-gray-800">
+                    <div class="flex items-end gap-2">
+                        <div class="flex-grow relative">
+                            <textarea
+                                id="message-input"
+                                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-200"
+                                placeholder="Ask about the PDF content..."
+                                rows="2"
+                            ></textarea>
                         </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Q&A Tab -->
-                    <div id="qa-tab" class="tab-content hidden mt-4">
-                        <h2 class="text-xl font-semibold text-gray-800">Ask a Question</h2>
-                        <div class="mt-2">
-                            <textarea id="question-input" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Ask a question about the PDF content..."></textarea>
-                            <button onclick="askQuestion()" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded-full hover:bg-blue-700 transition">Submit Question</button>
-                        </div>
-                        <div id="qa-loading" class="hidden flex items-center justify-center mt-4">
-                            <div class="spinner"></div>
-                            <p class="ml-2 text-gray-600">Fetching answer...</p>
-                        </div>
-                        <div id="qa-error" class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded-lg"></div>
-                        <div id="qa-answer" class="hidden mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg"></div>
-                    </div>
-
-                    <!-- Translation Tab -->
-                    <div id="translation-tab" class="tab-content hidden mt-4">
-                        <h2 class="text-xl font-semibold text-gray-800">Translate Summary</h2>
-                        <p class="text-gray-600 mt-1">Translate the summary from English to your selected language.</p>
-                        <div class="mt-4 flex flex-wrap gap-4 items-center">
-                            <select id="target-language" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                {% for id, lang in languages.items() %}
-                                    {% if id != 0 %}
-                                    <option value="{{ id }}">{{ lang.name }}</option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                            <button id="translate-button" onclick="translateSummary()" class="bg-purple-600 text-white py-2 px-4 rounded-full hover:bg-purple-700 transition">Translate</button>
-                        </div>
-                        <div id="translation-loading" class="hidden flex items-center justify-center mt-4">
-                            <div class="spinner"></div>
-                            <p class="ml-2 text-gray-600">Translating your summary...</p>
-                        </div>
-                        <div id="translation-error" class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded-lg"></div>
-                        <div id="translation-success" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded-lg"></div>
-                        <div id="translated-content-container" class="hidden mt-4">
-                            <h3 class="text-lg font-medium text-gray-800">Translated Text</h3>
-                            <div id="translated-content" class="mt-2 p-4 bg-gray-50 rounded-lg text-gray-700"></div>
-                            <button onclick="downloadTranslation()" class="mt-2 bg-orange-600 text-white py-2 px-4 rounded-full hover:bg-orange-700 transition">Download Translation</button>
-                        </div>
+                        <button id="send-message" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
 
     <script>
-        function showLoading() {
-            document.getElementById('loading').classList.remove('hidden');
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainContainer = document.getElementById('main-container');
+            const uploadState = document.getElementById('upload-state');
+            const summaryView = document.getElementById('summary-view');
+            const chatInterface = document.getElementById('chat-interface');
+            const fileInput = document.getElementById('file-input');
+            const browseBtn = document.getElementById('browse-btn');
+            const selectedFile = document.getElementById('selected-file');
+            const fileName = document.getElementById('file-name');
+            const removeFile = document.getElementById('remove-file');
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const uploadForm = document.getElementById('upload-form');
+            const toggleViewBtn = document.getElementById('toggle-view-btn');
+            const messageInput = document.getElementById('message-input');
+            const sendMessage = document.getElementById('send-message');
+            const chatContainer = document.getElementById('chat-container');
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                tab.classList.add('text-gray-600');
+            // Text generation speed (milliseconds per character)
+            const TYPE_SPEED = 5; // Adjust for faster/slower typing effect
+            const TYPE_SPEED_VARIANCE = 7; // Adds some randomness to typing speed
+            const TYPE_PAUSE_PROBABILITY = 0.01; // Probability of a brief pause while typing
+            const TYPE_PAUSE_DURATION = [50, 150]; // Range of pause duration in ms
+
+            // Check if summary exists and initialize the UI accordingly
+            {% if summary %}
+            // If summary exists, prepare the chat interface
+            initializeChatInterface({{ summary|tojson }});
+            mainContainer.classList.add('flex', 'flex-col');
+            {% endif %}
+
+            // File selection handling
+            browseBtn.addEventListener('click', () => {
+                fileInput.click();
             });
-            document.getElementById(tabName + '-tab').classList.remove('hidden');
-            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-        }
 
-        function showTranslation() {
-            switchTab('translation');
-        }
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    fileName.textContent = file.name;
+                    selectedFile.classList.remove('hidden');
+                    submitBtn.classList.remove('hidden');
+                }
+            });
 
-        function askQuestion() {
-            const question = document.getElementById('question-input').value.trim();
-            if (!question) {
-                document.getElementById('qa-error').innerText = 'Please enter a question.';
-                document.getElementById('qa-error').classList.remove('hidden');
-                return;
+            removeFile.addEventListener('click', () => {
+                fileInput.value = '';
+                selectedFile.classList.add('hidden');
+                submitBtn.classList.add('hidden');
+            });
+
+            // Form submission (traditional form submit, not AJAX)
+            uploadForm.addEventListener('submit', () => {
+                submitText.classList.add('hidden');
+                loadingSpinner.classList.remove('hidden');
+                submitBtn.disabled = true;
+            });
+
+            function initializeChatInterface(summary) {
+                // If there's a summary, add it as the first message
+                if (summary) {
+                    addMessage('ai', summary);
+                }
+
+                // Expand container
+               mainContainer.classList.add('flex', 'flex-col');
             }
 
-            document.getElementById('qa-loading').classList.remove('hidden');
-            document.getElementById('qa-error').classList.add('hidden');
-            document.getElementById('qa-answer').classList.add('hidden');
-
-            fetch('/ask', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('qa-loading').classList.add('hidden');
-                if (data.error) {
-                    document.getElementById('qa-error').innerText = data.error;
-                    document.getElementById('qa-error').classList.remove('hidden');
+            // Toggle between summary and chat views
+            toggleViewBtn.addEventListener('click', () => {
+                if (summaryView.classList.contains('hidden')) {
+                    // Show summary, hide chat
+                    summaryView.classList.remove('hidden');
+                    chatInterface.classList.add('hidden');
+                    toggleViewBtn.innerHTML = '<i class="fas fa-comments mr-1"></i> Chat';
                 } else {
-                    document.getElementById('qa-answer').innerText = data.answer;
-                    document.getElementById('qa-answer').classList.remove('hidden');
+                    // Show chat, hide summary
+                    summaryView.classList.add('hidden');
+                    chatInterface.classList.remove('hidden');
+                    toggleViewBtn.innerHTML = '<i class="fas fa-file-alt mr-1"></i> Summary';
                 }
-            })
-            .catch(error => {
-                document.getElementById('qa-loading').classList.add('hidden');
-                document.getElementById('qa-error').innerText = 'Error: ' + error.message;
-                document.getElementById('qa-error').classList.remove('hidden');
             });
-        }
 
-        function translateSummary() {
-            const summary = document.querySelector('#summary-tab .bg-gray-50').innerText;
-            const targetLang = document.getElementById('target-language').value;
+            // Handle sending messages
+            sendMessage.addEventListener('click', sendUserMessage);
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendUserMessage();
+                }
+            });
 
-            document.getElementById('translation-loading').classList.remove('hidden');
-            document.getElementById('translated-content-container').classList.add('hidden');
-            document.getElementById('translation-error').classList.add('hidden');
-            document.getElementById('translation-success').classList.add('hidden');
+            function sendUserMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
 
-            fetch('/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    target_language: parseInt(targetLang),
-                    content: summary
+                // Add user message to chat
+                addMessage('user', message);
+
+                // Clear input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+
+                // Show typing indicator
+                const typingIndicator = createTypingIndicator();
+                chatContainer.appendChild(typingIndicator);
+
+                // Scroll to bottom
+                scrollToBottom();
+
+                // Send to backend
+                fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: message })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('translation-loading').classList.add('hidden');
-                if (data.error) {
-                    document.getElementById('translation-error').innerText = data.error;
-                    document.getElementById('translation-error').classList.remove('hidden');
-                } else if (data.translated_content) {
-                    document.getElementById('translated-content').innerText = data.translated_content;
-                    document.getElementById('translated-content-container').classList.remove('hidden');
-                    document.getElementById('translation-success').innerText = 'Translation completed successfully!';
-                    document.getElementById('translation-success').classList.remove('hidden');
+                .then(response => response.json())
+                .then(data => {
+                    // Remove typing indicator
+                    typingIndicator.remove();
+
+                    if (data.error) {
+                        showError(data.error);
+                    } else if (data.answer) {
+                        // Add AI response
+                        addMessage('ai', data.answer);
+                    } else if (data.status_code === 200) {
+                        // Handle your API's response format
+                        addMessage('ai', data.answer);
+                    }
+                })
+                .catch(error => {
+                    typingIndicator.remove();
+                    showError('An error occurred: ' + error.message);
+                });
+            }
+
+            function addMessage(type, content) {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${type}-message`;
+
+                if (type === 'ai') {
+                    messageElement.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white mr-2 flex-shrink-0">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <span class="typing-text typing-cursor"></span>
+                            </div>
+                        </div>
+                        <div class="translate-dropdown">
+                            <button class="text-xs text-gray-400 hover:text-blue-400 translate-btn">
+                                <i class="fas fa-language"></i>
+                            </button>
+                            <div class="translate-panel hidden">
+                                <p class="text-xs text-gray-300 mb-2">Translate to:</p>
+                                <select class="language-select w-full text-xs p-1 border rounded bg-gray-700 text-gray-300 border-gray-600">
+                                    {% for id, lang in languages.items() %}
+                                    {% if id != '0' and id != 0 %}
+                                    <option value="{{ id }}">{{ lang.name }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <button class="do-translate w-full bg-blue-600 text-white text-xs py-1 rounded mt-2 hover:bg-blue-700">Translate</button>
+                            </div>
+                        </div>
+                    `;
+
+                    // Add to DOM first
+                    chatContainer.appendChild(messageElement);
+                    scrollToBottom();
+
+                    // Get the typing element
+                    const typingElement = messageElement.querySelector('.typing-text');
+
+                    // Format the content first (without displaying it)
+                    const formattedContent = formatContent(content);
+
+                    // Create a temporary div to extract the text content
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = formattedContent;
+                    const plainText = tempDiv.textContent || tempDiv.innerText;
+
+                    // Text typing animation
+                    let charIndex = 0;
+                    typingElement.textContent = '';
+
+                    function typeNextChar() {
+                        if (charIndex < plainText.length) {
+                            // Type the next character
+                            typingElement.textContent += plainText.charAt(charIndex);
+                            charIndex++;
+
+                            // Random typing speed for realism
+                            let nextTypeDelay = TYPE_SPEED + Math.random() * TYPE_SPEED_VARIANCE;
+
+                            // Occasionally pause like a human would
+                            if (Math.random() < TYPE_PAUSE_PROBABILITY) {
+                                const pauseDuration = Math.random() * (TYPE_PAUSE_DURATION[1] - TYPE_PAUSE_DURATION[0]) + TYPE_PAUSE_DURATION[0];
+                                nextTypeDelay += pauseDuration;
+                            }
+
+                            // Schedule next character
+                            setTimeout(typeNextChar, nextTypeDelay);
+                        } else {
+                            // Typing finished, replace with formatted content
+                            typingElement.classList.remove('typing-cursor');
+                            messageElement.querySelector('.message-content').innerHTML = formattedContent;
+                        }
+
+                        // Always scroll to bottom while typing
+                        scrollToBottom();
+                    }
+
+                    // Start typing animation
+                    setTimeout(typeNextChar, 300); // Small delay before starting to type
                 } else {
-                    document.getElementById('translation-error').innerText = data.message || 'Translation failed';
-                    document.getElementById('translation-error').classList.remove('hidden');
+                    // User messages - no typing animation
+                    messageElement.innerHTML = `
+                        <div class="flex items-start justify-end">
+                            <div class="message-content">
+                                ${formatContent(content)}
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-gray-200 ml-2 flex-shrink-0">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                    `;
+                    chatContainer.appendChild(messageElement);
+                    scrollToBottom();
                 }
-            })
-            .catch(error => {
-                document.getElementById('translation-loading').classList.add('hidden');
-                document.getElementById('translation-error').innerText = 'Error: ' + error.message;
-                document.getElementById('translation-error').classList.remove('hidden');
+
+                // Setup translation functionality for AI messages
+                if (type === 'ai') {
+                    const translateBtn = messageElement.querySelector('.translate-btn');
+                    const translatePanel = messageElement.querySelector('.translate-panel');
+                    const doTranslateBtn = messageElement.querySelector('.do-translate');
+
+                    translateBtn.addEventListener('click', () => {
+                        translatePanel.classList.toggle('hidden');
+                    });
+
+                    doTranslateBtn.addEventListener('click', () => {
+                        const languageSelect = messageElement.querySelector('.language-select');
+                        const targetLanguage = languageSelect.value;
+                        const originalContent = content;
+
+                        // Show loading state
+                        const messageContentDiv = messageElement.querySelector('.message-content');
+                        const originalHTML = messageContentDiv.innerHTML;
+                        messageContentDiv.innerHTML = '<div class="flex items-center"><div class="loading-spinner mr-2"></div> Translating...</div>';
+
+                        // Send translation request
+                        fetch('/translate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                target_language: parseInt(targetLanguage),
+                                content: originalContent
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                showError(data.error);
+                                messageContentDiv.innerHTML = originalHTML;
+                            } else if (data.translated_content) {
+                                // Start typing animation for the translated text
+                                const translatedContent = data.translated_content;
+                                messageContentDiv.innerHTML = '<span class="typing-text typing-cursor"></span>';
+                                const typingElement = messageContentDiv.querySelector('.typing-text');
+
+                                // Format the content first (without displaying it)
+                                const formattedTranslation = formatContent(translatedContent);
+
+                                // Extract plain text for typing effect
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = formattedTranslation;
+                                const plainTranslatedText = tempDiv.textContent || tempDiv.innerText;
+
+                                // Text typing animation for translation
+                                let charIndex = 0;
+                                typingElement.textContent = '';
+
+                                function typeNextTranslatedChar() {
+                                    if (charIndex < plainTranslatedText.length) {
+                                        typingElement.textContent += plainTranslatedText.charAt(charIndex);
+                                        charIndex++;
+                                        setTimeout(typeNextTranslatedChar, TYPE_SPEED + Math.random() * TYPE_SPEED_VARIANCE);
+                                    } else {
+                                        typingElement.classList.remove('typing-cursor');
+                                        messageContentDiv.innerHTML = formattedTranslation;
+                                    }
+                                    scrollToBottom();
+                                }
+
+                                // Start typing animation
+                                setTimeout(typeNextTranslatedChar, 300);
+                                translatePanel.classList.add('hidden');
+
+                            } else if (data.status_code === 200 && data.message === "Translation successful") {
+                                // Same as above, just different format from API
+                                const translatedContent = data.translated_content;
+                                messageContentDiv.innerHTML = '<span class="typing-text typing-cursor"></span>';
+                                const typingElement = messageContentDiv.querySelector('.typing-text');
+
+                                // Format and extract plain text
+                                const formattedTranslation = formatContent(translatedContent);
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = formattedTranslation;
+                                const plainTranslatedText = tempDiv.textContent || tempDiv.innerText;
+
+                                // Typing animation
+                                let charIndex = 0;
+                                typingElement.textContent = '';
+
+                                function typeNextTranslatedChar() {
+                                    if (charIndex < plainTranslatedText.length) {
+                                        typingElement.textContent += plainTranslatedText.charAt(charIndex);
+                                        charIndex++;
+                                        setTimeout(typeNextTranslatedChar, TYPE_SPEED + Math.random() * TYPE_SPEED_VARIANCE);
+                                    } else {
+                                        typingElement.classList.remove('typing-cursor');
+                                        messageContentDiv.innerHTML = formattedTranslation;
+                                    }
+                                    scrollToBottom();
+                                }
+
+                                setTimeout(typeNextTranslatedChar, 300);
+                                translatePanel.classList.add('hidden');
+                            } else {
+                                showError(data.message || "Translation failed");
+                                messageContentDiv.innerHTML = originalHTML;
+                            }
+                        })
+                        .catch(error => {
+                            showError('Translation error: ' + error.message);
+                            messageContentDiv.innerHTML = originalHTML;
+                        });
+                    });
+                }
+
+                // If this is the first AI message (summary), also show the chat interface
+                if (type === 'ai' && chatContainer.children.length === 1) {
+                    summaryView.classList.add('hidden');
+                    chatInterface.classList.remove('hidden');
+                    toggleViewBtn.innerHTML = '<i class="fas fa-file-alt mr-1"></i> Summary';
+                }
+            }
+
+            function createTypingIndicator() {
+                const typingElement = document.createElement('div');
+                typingElement.className = 'flex items-center mb-4';
+                typingElement.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white mr-2">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="bg-gray-700 p-3 rounded-lg border border-gray-600">
+                        <div class="typing-indicator">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                `;
+                return typingElement;
+            }
+
+            function scrollToBottom() {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function showError(message) {
+                // Create an error notification
+                const errorNotification = document.createElement('div');
+                errorNotification.className = 'bg-red-900 text-red-200 p-4 rounded-lg mb-4 fixed top-4 right-4 z-50 border border-red-700 shadow-lg';
+                errorNotification.textContent = message;
+
+                document.body.appendChild(errorNotification);
+
+                // Remove after 5 seconds
+                setTimeout(() => {
+                    errorNotification.classList.add('opacity-0', 'transition-opacity');
+                    setTimeout(() => {
+                        errorNotification.remove();
+                    }, 300);
+                }, 5000);
+            }
+
+            // Format content with bold, italics, and line breaks
+            function formatContent(content) {
+                if (!content) return '';
+
+                // Replace *** bold text *** with <strong>bold text</strong>
+                let formattedContent = content.replace(/\*\*\*(.*?)\*\*\*/g, '<strong>$1</strong>');
+
+                // Replace ** bold text ** with <strong>bold text</strong> (alternate format)
+                formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                // Replace * italic text * with <em>italic text</em> (but avoid matching *** or **)
+                formattedContent = formattedContent.replace(/(?<!\*)\*((?!\*)[^*]+)\*(?!\*)/g, '<em>$1</em>');
+
+                // Clean up the line break markers by removing any spaces before l
+                formattedContent = formattedContent.replace(/ lnn/g, '\\lnn');
+
+                // Replace both \n and \l with line breaks and create paragraphs
+                formattedContent = formattedContent.replace(/\\lnn/g, '\n'); // Convert \l to actual newlines
+                formattedContent = formattedContent.replace(/\\n/g, '\n'); // Convert \n escaped chars to actual newlines
+
+                // Split by double newlines for paragraphs
+                const paragraphs = formattedContent.split(/\n\s*\n/);
+                formattedContent = paragraphs.map(para => {
+                    if (!para.trim()) return '';
+                    // Handle single newlines within paragraphs
+                    return `<p>${para.replace(/\n/g, '<br>')}</p>`;
+                }).join('');
+
+                return formattedContent;
+            }
+
+            // File drag and drop functionality
+            const uploadArea = document.querySelector('.upload-area');
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('border-blue-500', 'bg-gray-800');
             });
-        }
 
-        function downloadTranslation() {
-            const translatedText = document.getElementById('translated-content').innerText;
-            const targetLangSelect = document.getElementById('target-language');
-            const targetLangName = targetLangSelect.options[targetLangSelect.selectedIndex].text;
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('border-blue-500', 'bg-gray-800');
+            });
 
-            const blob = new Blob([translatedText], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `translation_${targetLangName.toLowerCase()}_${Date.now()}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('border-blue-500', 'bg-gray-800');
+
+                if (e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    if (file.type === 'application/pdf') {
+                        // Create a new File object to assign to the input
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        fileInput.files = dataTransfer.files;
+
+                        fileName.textContent = file.name;
+                        selectedFile.classList.remove('hidden');
+                        submitBtn.classList.remove('hidden');
+                    } else {
+                        showError('Please upload a PDF file');
+                    }
+                }
+            });
+
+            // Auto-resize textarea as user types
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            // Close translation panels when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.translate-dropdown')) {
+                    document.querySelectorAll('.translate-panel').forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+                }
+            });
+        });
     </script>
 </body>
 </html>

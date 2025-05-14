@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftSum - Instant PDF Summaries</title>
+    <link rel="stylesheet" href="../static/home_style.css">
+    <!-- Google Fonts (Example: Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Favicon -->
+    <link rel="icon" href="static/assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+
+    <!-- Background Animated Shapes -->
+    <div class="bg-shapes">
+        <div class="shape shape1"></div>
+        <div class="shape shape2"></div>
+        <div class="shape shape3"></div>
+        <div class="shape shape4"></div>
+    </div>
+
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">
+                <img src="static/assets/swiftsum-logo.svg" alt="SwiftSum" class="logo-img">
+                <span>SwiftSum</span> <span class="logo-sparkle">✨</span>
+            </a>
+            <a href="#summarizer-section" class="cta-button nav-cta animate-on-load fade-in">Try It Now</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="decorated-section">
+            <div class="decorator decorator-dots" style="top: 120px; right: 15%;"></div>
+            <div class="container hero-content">
+                <div class="hero-text animate-on-load slide-in-left">
+                    <h1>Unlock Knowledge <span class="gradient-text">Instantly</span>.</h1>
+                    <p class="subtitle">Tired of dense PDFs? SwiftSum reads them for you, delivering concise, accurate summaries in seconds.</p>
+                    <a href="/index" class="cta-button hero-cta">Summarize My PDF <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="hero-graphic animate-on-load slide-in-right">
+                    <img src="static/assets/pdf-summary-illustration.svg" alt="PDF being transformed into a concise summary">
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="decorated-section">
+            <div class="decorator decorator-circle" style="bottom: -150px; left: -100px;"></div>
+            <div class="container">
+                <h2 class="section-title animate-on-scroll fade-in-up">Effortless Summaries in 3 Steps</h2>
+                <div class="steps-container">
+                    <div class="step animate-on-scroll fade-in-up" style="--delay: 0.1s;">
+                        <div class="step-icon-wrapper"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <h3>1. Upload</h3>
+                        <p>Simply drag & drop or select your PDF file.</p>
+                        <img src="static/assets/step1-upload.svg" alt="Upload PDF illustration" class="step-illustration">
+                    </div>
+                    <div class="step animate-on-scroll fade-in-up" style="--delay: 0.3s;">
+                         <div class="step-icon-wrapper"><i class="fas fa-cogs"></i></div>
+                        <h3>2. Process</h3>
+                        <p>Our smart AI reads and analyzes the content.</p>
+                        <img src="static/assets/step2-process.svg" alt="AI processing illustration" class="step-illustration">
+                    </div>
+                    <div class="step animate-on-scroll fade-in-up" style="--delay: 0.5s;">
+                        <div class="step-icon-wrapper"><i class="fas fa-file-alt"></i></div>
+                        <h3>3. Summarize</h3>
+                        <p>Receive a clear, concise summary instantly.</p>
+                        <img src="static/assets/step3-summary.svg" alt="Summary result illustration" class="step-illustration">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="decorated-section">
+            <div class="decorator decorator-dots" style="top: 20px; right: 10%;"></div>
+            <div class="decorator decorator-waves" style="bottom: 50px; left: 5%;"></div>
+            <div class="container">
+                <h2 class="section-title animate-on-scroll fade-in-up">Why Choose <span class="gradient-text">SwiftSum</span>?</h2>
+                <div class="features-grid">
+                    <div class="feature-card animate-on-scroll fade-in-up" style="--delay: 0.1s;">
+                        <i class="fas fa-tachometer-alt feature-icon"></i>
+                        <h3>Lightning Fast</h3>
+                        <p>Get summaries in seconds, not hours. Save valuable time.</p>
+                    </div>
+                    <div class="feature-card animate-on-scroll fade-in-up" style="--delay: 0.3s;">
+                        <i class="fas fa-brain feature-icon"></i>
+                        <h3>Intelligent AI</h3>
+                        <p>Accurate and context-aware summaries capturing key points.</p>
+                    </div>
+                     <div class="feature-card animate-on-scroll fade-in-up" style="--delay: 0.5s;">
+                        <i class="fas fa-lock feature-icon"></i>
+                        <h3>Secure & Private</h3>
+                        <p>Your documents are processed securely and never stored.</p>
+                    </div>
+                    <div class="feature-card animate-on-scroll fade-in-up" style="--delay: 0.7s;">
+                        <i class="fas fa-mobile-alt feature-icon"></i>
+                        <h3>Any Device</h3>
+                        <p>Access SwiftSum from your desktop, tablet, or phone.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="decorated-section">
+            <div class="decorator decorator-circle" style="top: -150px; right: -100px;"></div>
+            <div class="container">
+                <h2 class="section-title animate-on-scroll fade-in-up">What Users Say</h2>
+                <div class="testimonials-container">
+                    <div class="testimonial animate-on-scroll fade-in-up" style="--delay: 0.1s;">
+                        <div class="testimonial-content">
+                            <p>"SwiftSum has completely changed how I handle research papers. I can now get the gist of multiple papers in minutes!"</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="static/assets/testimonial1.jpg" alt="Sarah Johnson">
+                            </div>
+                            <div class="author-info">
+                                <h4>Sarah Johnson</h4>
+                                <p>PhD Student</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial animate-on-scroll fade-in-up" style="--delay: 0.3s;">
+                        <div class="testimonial-content">
+                            <p>"As a business analyst, I review hundreds of reports monthly. SwiftSum helps me quickly identify which ones need my full attention."</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="static/assets/testimonial2.jpg" alt="Mark Roberts">
+                            </div>
+                            <div class="author-info">
+                                <h4>Mark Roberts</h4>
+                                <p>Business Analyst</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial animate-on-scroll fade-in-up" style="--delay: 0.5s;">
+                        <div class="testimonial-content">
+                            <p>"The accuracy is remarkable. SwiftSum doesn't just extract text—it understands context and delivers the essence of documents."</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="static/assets/testimonial3.jpg" alt="Priya Mehta">
+                            </div>
+                            <div class="author-info">
+                                <h4>Priya Mehta</h4>
+                                <p>Legal Consultant</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Placeholder for Summarizer Section (Where the tool would live) -->
+        <section id="summarizer-section" class="summarizer-placeholder decorated-section">
+             <div class="container">
+                <h2 class="section-title animate-on-scroll fade-in-up">Ready to Summarize?</h2>
+                <p class="subtitle animate-on-scroll fade-in-up" style="--delay: 0.2s;">Upload your PDF and get a concise summary in seconds.</p>
+                <div class="placeholder-box animate-on-scroll zoom-in" style="--delay: 0.4s;">
+                    <div class="pdf-viewer">
+                        <div class="pdf-header">
+                            <div class="pdf-icon"><i class="fas fa-file-pdf"></i></div>
+                            <div class="pdf-title">Research Paper.pdf</div>
+                        </div>
+                        <div class="pdf-body">
+                            <div class="pdf-text-lines">
+                                <div class="pdf-text-line"></div>
+                                <div class="pdf-text-line"></div>
+                                <div class="pdf-text-line" style="width: 85%;"></div>
+                                <div class="pdf-text-line" style="width: 90%;"></div>
+                            </div>
+                            <div class="pdf-arrow"><i class="fas fa-arrow-right"></i></div>
+                            <div class="pdf-summary">
+                                <div class="summary-header">SwiftSum</div>
+                                <div class="summary-text-line"></div>
+                                <div class="summary-text-line" style="width: 90%;"></div>
+                                <div class="summary-text-line" style="width: 85%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="upload-area">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drop your PDF here or <span class="upload-link">Browse Files</span></p>
+                        <span class="coming-soon-badge">Coming Soon!</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section id="cta-section">
+            <div class="container">
+                <div class="cta-box animate-on-scroll fade-in-up">
+                    <h2>Ready to save hours of reading time?</h2>
+                    <p>Join thousands of professionals who use SwiftSum to work smarter, not harder.</p>
+                    <a href="/index" class="cta-button">Get Started Free</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-branding">
+                    <a href="#" class="logo footer-logo">
+                        <img src="get start/swiftsum-logo.svg" alt="SwiftSum" class="logo-img">
+                        <span>SwiftSum</span>
+                    </a>
+                    <p class="footer-tagline">Unlock knowledge instantly.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-links-group">
+                        <h4>Company</h4>
+                        <a href="#">About</a>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                    </div>
+                    <div class="footer-links-group">
+                        <h4>Support</h4>
+                        <a href="#">FAQ</a>
+                        <a href="#">Contact Us</a>
+                    </div>
+                    <div class="footer-social">
+                        <h4>Follow Us</h4>
+                        <div class="social-icons">
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                            <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2023 SwiftSum. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../static/home_script.js"></script>
+</body>
+</html>
