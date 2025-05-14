@@ -1,0 +1,23 @@
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="uploadGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C63FF" />
+      <stop offset="100%" stop-color="#8F8FFF" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Cloud Upload Area -->
+  <rect x="50" y="40" width="200" height="140" rx="10" fill="#f5f5f5" stroke="#ddd" stroke-width="2" />
+  <path d="M150,70 L150,130 M130,90 L150,70 L170,90" fill="none" stroke="#6C63FF" stroke-width="3" />
+  
+  <!-- Cloud Icon -->
+  <path d="M110,100 C110,88 120,80 130,80 C140,70 160,70 170,80 C190,80 200,95 190,110 C195,120 190,130 180,130 L130,130 C115,130 105,115 110,100 Z" fill="white" stroke="url(#uploadGradient)" stroke-width="2" />
+  
+  <!-- PDF Icon -->
+  <rect x="135" y="130" width="30" height="40" rx="2" fill="#FF6584" />
+  <rect x="135" y="130" width="30" height="10" rx="2" fill="#FF8B8B" />
+  <text x="150" y="155" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
+  
+  <!-- Text Label -->
+  <text x="150" y="185" font-family="Poppins, sans-serif" font-size="14" fill="#333" text-anchor="middle">Drop or Select File</text>
+</svg>

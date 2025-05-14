@@ -1,0 +1,33 @@
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="processGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C63FF" />
+      <stop offset="100%" stop-color="#8F8FFF" />
+    </linearGradient>
+  </defs>
+  
+  <!-- PDF Document -->
+  <rect x="50" y="70" width="80" height="100" rx="5" fill="#FF6584" />
+  <rect x="50" y="70" width="80" height="20" rx="5" fill="#FF8B8B" />
+  <text x="90" y="85" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">PDF</text>
+  
+  <!-- Processing Gears -->
+  <circle cx="150" cy="100" r="25" fill="white" stroke="url(#processGradient)" stroke-width="3" />
+  <path d="M150,100 L150,85 M150,100 L165,100 M150,100 L142,108 M150,100 L138,92" fill="none" stroke="#6C63FF" stroke-width="2" />
+  <circle cx="150" cy="100" r="5" fill="#6C63FF" />
+  
+  <!-- AI Brain -->
+  <circle cx="150" cy="140" r="30" fill="white" stroke="url(#processGradient)" stroke-width="3" />
+  <path d="M130,140 C130,125 170,125 170,140 C170,155 130,155 130,140 Z M150,120 C140,125 140,155 150,160 M150,120 C160,125 160,155 150,160" fill="none" stroke="#6C63FF" stroke-width="2" />
+  
+  <!-- Output Document -->
+  <rect x="170" y="70" width="80" height="100" rx="5" fill="white" stroke="#6C63FF" stroke-width="2" />
+  <rect x="170" y="70" width="80" height="20" rx="5" fill="url(#processGradient)" />
+  <text x="210" y="85" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">AI Analysis</text>
+  
+  <!-- Processing Lines -->
+  <rect x="190" y="100" width="40" height="5" rx="2" fill="#e0e0e0" />
+  <rect x="190" y="115" width="35" height="5" rx="2" fill="#e0e0e0" />
+  <rect x="190" y="130" width="40" height="5" rx="2" fill="#e0e0e0" />
+  <rect x="190" y="145" width="30" height="5" rx="2" fill="#e0e0e0" />
+</svg>

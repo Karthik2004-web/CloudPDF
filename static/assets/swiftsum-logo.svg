@@ -1,0 +1,11 @@
+<svg viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6C63FF" />
+      <stop offset="100%" stop-color="#FF6584" />
+    </linearGradient>
+  </defs>
+  <path d="M40,10 C28,10 28,40 15,40 S2,25 10,20 S20,25 25,15 S35,5 40,10 Z" fill="url(#logoGradient)" />
+  <circle cx="42" cy="15" r="3" fill="#FFD166" />
+  <text x="60" y="33" font-family="Poppins, sans-serif" font-size="22" font-weight="600" fill="#333">SwiftSum</text>
+</svg>

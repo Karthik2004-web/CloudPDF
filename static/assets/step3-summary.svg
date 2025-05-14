@@ -1,0 +1,27 @@
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="summaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6C63FF" />
+      <stop offset="100%" stop-color="#8F8FFF" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Summary Document -->
+  <rect x="50" y="50" width="200" height="120" rx="10" fill="white" stroke="#ddd" stroke-width="2" />
+  <rect x="50" y="50" width="200" height="30" rx="10" fill="url(#summaryGradient)" />
+  <text x="150" y="70" font-family="Poppins, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">Swift Summary</text>
+  
+  <!-- Summary Content -->
+  <rect x="70" y="90" width="160" height="8" rx="2" fill="#e0e0e0" />
+  <rect x="70" y="105" width="140" height="8" rx="2" fill="#e0e0e0" />
+  <rect x="70" y="120" width="160" height="8" rx="2" fill="#e0e0e0" />
+  <rect x="70" y="135" width="120" height="8" rx="2" fill="#e0e0e0" />
+  <rect x="70" y="150" width="140" height="8" rx="2" fill="#e0e0e0" />
+  
+  <!-- Checkmark -->
+  <circle cx="250" cy="180" r="20" fill="#4CAF50" />
+  <path d="M240,180 L248,188 L260,172" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Success Text -->
+  <text x="150" y="185" font-family="Poppins, sans-serif" font-size="14" fill="#333" text-anchor="middle">Summary Complete!</text>
+</svg>
