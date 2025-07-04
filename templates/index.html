@@ -9,13 +9,88 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+        /* Theme Variables */
+        :root {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --bg-tertiary: #374151;
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --border-primary: #374151;
+            --border-secondary: #4b5563;
+            --accent-blue: #3b82f6;
+            --accent-blue-dark: #1d4ed8;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #e2e8f0;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-primary: #e5e7eb;
+            --border-secondary: #d1d5db;
+            --accent-blue: #2563eb;
+            --accent-blue-dark: #1d4ed8;
+        }
+
+        /* Theme Toggle for Index Page */
+        .theme-toggle-index {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle-index:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-toggle-index i {
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle-index .sun-icon {
+            display: none;
+            color: #f59e0b;
+        }
+
+        .theme-toggle-index .moon-icon {
+            display: block;
+            color: #60a5fa;
+        }
+
+        [data-theme="light"] .theme-toggle-index .sun-icon {
+            display: block;
+        }
+
+        [data-theme="light"] .theme-toggle-index .moon-icon {
+            display: none;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            background-color: #111827;
-            color: #e5e7eb;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .dynamic-background {
@@ -58,18 +133,18 @@
         }
 
         .user-message {
-            background-color: #3b82f6;
+            background-color: var(--accent-blue);
             color: white;
             margin-left: auto;
             border-top-right-radius: 0;
         }
 
         .ai-message {
-            background-color: #1f2937;
-            color: #e5e7eb;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
             margin-right: auto;
             border-top-left-radius: 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-primary);
         }
 
         @keyframes fadeIn {
@@ -85,7 +160,7 @@
         .typing-indicator span {
             width: 8px;
             height: 8px;
-            background-color: #3b82f6;
+            background-color: var(--accent-blue);
             border-radius: 50%;
             display: inline-block;
             margin-right: 3px;
@@ -117,7 +192,7 @@
             position: absolute;
             top: 2rem;
             right: 0;
-            background: #374151;
+            background: var(--bg-tertiary);
             border-radius: 0.5rem;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
             padding: 0.5rem;
@@ -142,13 +217,13 @@
 
         /* PDF Upload Area */
         .upload-area {
-            border: 2px dashed #4b5563;
+            border: 2px dashed var(--border-secondary);
             border-radius: 1rem;
             transition: all 0.3s ease;
         }
 
         .upload-area:hover {
-            border-color: #3b82f6;
+            border-color: var(--accent-blue);
             background-color: rgba(59, 130, 246, 0.1);
         }
 
@@ -165,16 +240,16 @@
         /* Text generation effect */
         .typing-text {
             display: inline-block;
-            border-right: 0.1em solid #3b82f6;
+            border-right: 0.1em solid var(--accent-blue);
             white-space: pre-wrap;
             overflow-wrap: break-word;
             max-width: 100%;
         }
 
         @keyframes cursor-blink {
-            0% { border-color: #3b82f6; }
+            0% { border-color: var(--accent-blue); }
             50% { border-color: transparent; }
-            100% { border-color: #3b82f6; }
+            100% { border-color: var(--accent-blue); }
         }
 
         .typing-cursor {
@@ -210,53 +285,86 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #1f2937;
+            background: var(--bg-secondary);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #4b5563;
+            background: var(--border-secondary);
             border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
+            background: var(--text-secondary);
         }
 
-        /* Dark mode form elements */
+        /* Form elements */
         input, textarea, select {
-            background-color: #374151;
-            color: #e5e7eb;
-            border-color: #4b5563;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-secondary);
         }
 
         input:focus, textarea:focus, select:focus {
-            border-color: #3b82f6;
+            border-color: var(--accent-blue);
             outline: none;
         }
 
         .glow-effect {
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
         }
+
+        /* Main Container Styles */
+        .main-container {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            transition: all 0.3s ease;
+        }
+
+        .header-gradient {
+            background: linear-gradient(to right, var(--bg-primary), var(--bg-secondary));
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--accent-blue);
+            border: 1px solid var(--border-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-secondary);
+        }
+
+        .text-accent {
+            color: var(--accent-blue);
+        }
     </style>
 </head>
 <body>
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle-index">
+        <i class="fas fa-sun sun-icon"></i>
+        <i class="fas fa-moon moon-icon"></i>
+    </div>
+
     <!-- Dynamic Background -->
     <div class="dynamic-background"></div>
 
     <!-- Main Container -->
     <div class="min-h-screen w-full flex items-center justify-center p-4 relative">
         <!-- Initial Upload Box / Chat Interface Container -->
-<div id="main-container" class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] transition-all overflow-hidden border border-gray-700">            <!-- Header -->
-            <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 border-b border-gray-700">
+<div id="main-container" class="main-container rounded-2xl shadow-2xl w-full max-w-[90vw] h-[90vh] transition-all overflow-hidden">            <!-- Header -->
+            <div class="header-gradient p-6 border-b">
                 <div class="flex justify-between items-center">
-                    <h1 class="text-2xl font-bold text-blue-400">PDF AI Assistant</h1>
+                    <h1 class="text-2xl font-bold text-accent">PDF AI Assistant</h1>
                     <div id="summary-actions" class="{% if not summary %}hidden{% endif %} space-x-2">
                         {% if filename %}
-                        <a href="{{ url_for('download_file', filename=filename) }}" class="bg-gray-700 hover:bg-gray-600 text-blue-300 text-sm py-1 px-3 rounded-full transition">
+                        <a href="{{ url_for('download_file', filename=filename) }}" class="btn-secondary text-sm py-1 px-3 rounded-full transition">
                             <i class="fas fa-download mr-1"></i> Summary
                         </a>
                         {% endif %}
-                        <button id="toggle-view-btn" class="bg-gray-700 hover:bg-gray-600 text-blue-300 text-sm py-1 px-3 rounded-full transition">
+                        <button id="toggle-view-btn" class="btn-secondary text-sm py-1 px-3 rounded-full transition">
                             <i class="fas fa-comments mr-1"></i> Chat
                         </button>
                     </div>
@@ -342,6 +450,26 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Theme Toggle Functionality
+            const themeToggle = document.querySelector('.theme-toggle-index');
+            const body = document.body;
+            
+            // Initialize theme from localStorage or default to dark
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            body.setAttribute('data-theme', savedTheme);
+            
+            // Handle theme toggle
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const currentTheme = body.getAttribute('data-theme') || 'dark';
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    body.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
+
+            // App elements
             const mainContainer = document.getElementById('main-container');
             const uploadState = document.getElementById('upload-state');
             const summaryView = document.getElementById('summary-view');
